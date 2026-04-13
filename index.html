@@ -2,74 +2,128 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>サイコロ確率ツール</title>
+
 <style>
-body { font-family: sans-serif; padding: 20px; }
-input, select, button { margin: 5px; padding: 5px; }
-.result { margin-top: 10px; font-weight: bold; }
-.error { color: red; }
+body {
+    font-family: sans-serif;
+    padding: 15px;
+    background: #f5f5f5;
+}
+
+h1 {
+    text-align: center;
+}
+
+.container {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    margin-top: 15px;
+}
+
+button:active {
+    background: #45a049;
+}
+
+.result {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.error {
+    color: red;
+}
 </style>
 </head>
+
 <body>
 
-<h1>🎲 サイコロ確率ツール</h1>
+<h1>🎲 サイコロ確率</h1>
 
-<h2>① 条件に合う確率</h2>
+<div class="container">
+<h2>① 条件の確率</h2>
 
-サイコロの数：
+<label>サイコロの数</label>
 <input type="number" id="diceCount1" placeholder="1〜5" min="1" max="5">
 
-モード：
+<label>モード</label>
 <select id="mode">
   <option value="atLeast">少なくとも1回</option>
   <option value="all">全部</option>
 </select>
 
-条件：
+<label>条件</label>
 <select id="condition">
   <option value="even">偶数</option>
   <option value="odd">奇数</option>
   <option value="number">数値</option>
 </select>
 
-数値（数値選択時）：
+<label>数値（数値選択時）</label>
 <input type="number" id="targetNumber" placeholder="1〜6" min="1" max="6">
 
-分数表示：
+<label>分数表示</label>
 <select id="fractionToggle">
   <option value="on">ON</option>
   <option value="off">OFF</option>
 </select>
 
-<br>
 <button onclick="calc()">計算</button>
 
 <div class="result" id="result1"></div>
+</div>
 
-<hr>
 
+<div class="container">
 <h2>② 合計の確率</h2>
 
-サイコロの数：
+<label>サイコロの数</label>
 <input type="number" id="diceCount2" placeholder="1〜5" min="1" max="5">
 
-条件：
+<label>条件</label>
 <select id="sumCondition">
   <option value="以上">以上</option>
   <option value="以下">以下</option>
   <option value="ちょうど">ちょうど</option>
 </select>
 
-合計値：
+<label>合計値</label>
 <input type="number" id="targetSum" placeholder="例：10">
 
-<br>
 <button onclick="calcSum()">計算</button>
 
 <div class="result" id="result2"></div>
+</div>
 
 <script>
-// 最大公約数
+// gcd
 function gcd(a, b) {
     while (b !== 0) {
         let t = b;
@@ -79,13 +133,12 @@ function gcd(a, b) {
     return a;
 }
 
-// 分数化
 function toFraction(num, den) {
     let g = gcd(num, den);
-    return (num / g) + "/" + (den / g);
+    return (num/g) + "/" + (den/g);
 }
 
-// ① 条件系
+// 条件系
 function calc() {
     let n = Number(document.getElementById("diceCount1").value);
     let mode = document.getElementById("mode").value;
@@ -93,9 +146,8 @@ function calc() {
     let target = Number(document.getElementById("targetNumber").value);
     let showFraction = document.getElementById("fractionToggle").value === "on";
 
-    // 入力チェック
     if (!n || n < 1 || n > 5) {
-        document.getElementById("result1").innerHTML = "<span class='error'>サイコロの数は1〜5で入力</span>";
+        result1.innerHTML = "<span class='error'>1〜5で入力</span>";
         return;
     }
 
@@ -105,7 +157,7 @@ function calc() {
         p_num = 3; p_den = 6;
     } else {
         if (!target || target < 1 || target > 6) {
-            document.getElementById("result1").innerHTML = "<span class='error'>数値は1〜6で入力</span>";
+            result1.innerHTML = "<span class='error'>1〜6で入力</span>";
             return;
         }
         p_num = 1; p_den = 6;
@@ -124,60 +176,50 @@ function calc() {
     let decimal = numerator / denominator;
 
     let text = "確率：";
-
-    if (showFraction) {
-        text += toFraction(numerator, denominator) + " ";
-    }
-
+    if (showFraction) text += toFraction(numerator, denominator) + " ";
     text += "(" + (decimal * 100).toFixed(2) + "%)";
 
-    document.getElementById("result1").innerText = text;
+    result1.innerText = text;
 }
 
-// ② 合計系
+// 合計系
 function calcSum() {
     let n = Number(document.getElementById("diceCount2").value);
     let cond = document.getElementById("sumCondition").value;
     let target = Number(document.getElementById("targetSum").value);
 
-    // 入力チェック
     if (!n || n < 1 || n > 5) {
-        document.getElementById("result2").innerHTML = "<span class='error'>サイコロの数は1〜5で入力</span>";
+        result2.innerHTML = "<span class='error'>1〜5で入力</span>";
         return;
     }
 
-    if (target === "" || isNaN(target)) {
-        document.getElementById("result2").innerHTML = "<span class='error'>合計値を入力してください</span>";
+    if (isNaN(target)) {
+        result2.innerHTML = "<span class='error'>値を入力</span>";
         return;
     }
 
-    let total = 0;
-    let success = 0;
+    let total = 0, success = 0;
 
-    function dfs(count, sum) {
-        if (count === n) {
+    function dfs(c, s) {
+        if (c === n) {
             total++;
             if (
-                (cond === "以上" && sum >= target) ||
-                (cond === "以下" && sum <= target) ||
-                (cond === "ちょうど" && sum === target)
-            ) {
-                success++;
-            }
+                (cond === "以上" && s >= target) ||
+                (cond === "以下" && s <= target) ||
+                (cond === "ちょうど" && s === target)
+            ) success++;
             return;
         }
-        for (let i = 1; i <= 6; i++) {
-            dfs(count + 1, sum + i);
-        }
+        for (let i = 1; i <= 6; i++) dfs(c+1, s+i);
     }
 
     dfs(0, 0);
 
     let decimal = success / total;
-    let fraction = toFraction(success, total);
 
-    document.getElementById("result2").innerText =
-        "確率：" + fraction + " (" + (decimal * 100).toFixed(2) + "%)";
+    result2.innerText =
+        "確率：" + toFraction(success, total) +
+        " (" + (decimal * 100).toFixed(2) + "%)";
 }
 </script>
 
