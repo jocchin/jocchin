@@ -2,16 +2,24 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>サイコロ確率ツール（完全版）</title>
+<title>サイコロ確率ツール</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+input, select, button { margin: 5px; padding: 5px; }
+.result { margin-top: 10px; font-weight: bold; }
+.error { color: red; }
+</style>
 </head>
 <body>
+
+<h1>🎲 サイコロ確率ツール</h1>
 
 <h2>① 条件に合う確率</h2>
 
 サイコロの数：
-<input type="number" id="diceCount1" value="1" min="1" max="5">
+<input type="number" id="diceCount1" placeholder="1〜5" min="1" max="5">
 
-条件タイプ：
+モード：
 <select id="mode">
   <option value="atLeast">少なくとも1回</option>
   <option value="all">全部</option>
@@ -25,18 +33,25 @@
 </select>
 
 数値（数値選択時）：
-<input type="number" id="targetNumber" value="1" min="1" max="6">
+<input type="number" id="targetNumber" placeholder="1〜6" min="1" max="6">
 
+分数表示：
+<select id="fractionToggle">
+  <option value="on">ON</option>
+  <option value="off">OFF</option>
+</select>
+
+<br>
 <button onclick="calc()">計算</button>
 
-<p id="result1"></p>
+<div class="result" id="result1"></div>
 
 <hr>
 
 <h2>② 合計の確率</h2>
 
 サイコロの数：
-<input type="number" id="diceCount2" value="1" min="1" max="5">
+<input type="number" id="diceCount2" placeholder="1〜5" min="1" max="5">
 
 条件：
 <select id="sumCondition">
@@ -46,45 +61,95 @@
 </select>
 
 合計値：
-<input type="number" id="targetSum" value="1">
+<input type="number" id="targetSum" placeholder="例：10">
 
+<br>
 <button onclick="calcSum()">計算</button>
 
-<p id="result2"></p>
+<div class="result" id="result2"></div>
 
 <script>
+// 最大公約数
+function gcd(a, b) {
+    while (b !== 0) {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+// 分数化
+function toFraction(num, den) {
+    let g = gcd(num, den);
+    return (num / g) + "/" + (den / g);
+}
+
+// ① 条件系
 function calc() {
     let n = Number(document.getElementById("diceCount1").value);
     let mode = document.getElementById("mode").value;
     let condition = document.getElementById("condition").value;
+    let target = Number(document.getElementById("targetNumber").value);
+    let showFraction = document.getElementById("fractionToggle").value === "on";
 
-    let p;
+    // 入力チェック
+    if (!n || n < 1 || n > 5) {
+        document.getElementById("result1").innerHTML = "<span class='error'>サイコロの数は1〜5で入力</span>";
+        return;
+    }
 
-    if (condition === "even") {
-        p = 3/6;
-    } else if (condition === "odd") {
-        p = 3/6;
+    let p_num, p_den;
+
+    if (condition === "even" || condition === "odd") {
+        p_num = 3; p_den = 6;
     } else {
-        p = 1/6;
+        if (!target || target < 1 || target > 6) {
+            document.getElementById("result1").innerHTML = "<span class='error'>数値は1〜6で入力</span>";
+            return;
+        }
+        p_num = 1; p_den = 6;
     }
 
-    let result;
+    let numerator, denominator;
 
-    if (mode === "atLeast") {
-        result = 1 - Math.pow(1 - p, n);
-    } else if (mode === "all") {
-        result = Math.pow(p, n);
+    if (mode === "all") {
+        numerator = Math.pow(p_num, n);
+        denominator = Math.pow(p_den, n);
+    } else {
+        denominator = Math.pow(p_den, n);
+        numerator = denominator - Math.pow(p_den - p_num, n);
     }
 
-    document.getElementById("result1").innerText =
-        "確率：" + (result * 100).toFixed(2) + "%";
+    let decimal = numerator / denominator;
+
+    let text = "確率：";
+
+    if (showFraction) {
+        text += toFraction(numerator, denominator) + " ";
+    }
+
+    text += "(" + (decimal * 100).toFixed(2) + "%)";
+
+    document.getElementById("result1").innerText = text;
 }
 
-
+// ② 合計系
 function calcSum() {
     let n = Number(document.getElementById("diceCount2").value);
     let cond = document.getElementById("sumCondition").value;
     let target = Number(document.getElementById("targetSum").value);
+
+    // 入力チェック
+    if (!n || n < 1 || n > 5) {
+        document.getElementById("result2").innerHTML = "<span class='error'>サイコロの数は1〜5で入力</span>";
+        return;
+    }
+
+    if (target === "" || isNaN(target)) {
+        document.getElementById("result2").innerHTML = "<span class='error'>合計値を入力してください</span>";
+        return;
+    }
 
     let total = 0;
     let success = 0;
@@ -108,10 +173,11 @@ function calcSum() {
 
     dfs(0, 0);
 
-    let result = success / total;
+    let decimal = success / total;
+    let fraction = toFraction(success, total);
 
     document.getElementById("result2").innerText =
-        "確率：" + (result * 100).toFixed(2) + "%";
+        "確率：" + fraction + " (" + (decimal * 100).toFixed(2) + "%)";
 }
 </script>
 
